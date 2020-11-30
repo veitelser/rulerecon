@@ -1,0 +1,141 @@
+Guide to 1D cellular automaton rule reconstruction with RRR
+
+******************************************************************************************
+
+This is a guide for reproducing the results in:
+
+"Reconstructing cellular automata rules from observations at nonconsecutive times"
+
+You will only need a C compiler and the standard C libraries.
+
+******************************************************************************************
+
+Compile:
+
+gcc -O2 rulerecon.c -lm -o rulerecon
+
+******************************************************************************************
+
+Run the command line without arguments to be reminded of their placement:
+
+./rulerecon
+expected eleven arguments: datafile, inputs, steps, eta, zeta, beta, maxiter, iterstride, stoperr, trials, id
+
+datafile: initial and final bit strings of CA
+inputs: number of inputs of the CA rule
+steps: number of time steps between data strings
+eta, zeta, beta: hyperparameters
+maxiter: maximum number of RRR iterations per trial
+iterstride: number of RRR iterations between outputs to the error & rule streams
+stoperr: iterations are terminated when the error falls below this value
+trials: number of runs in the experiment
+id: character string label of the experiment
+
+******************************************************************************************
+
+Example:
+
+./rulerecon 110_3_4.dat 3 4 .4 .7 .2 50000 100 .01 5 test &
+
+This generates four output files: test.stats, test.sol, test.err, test.rule
+
+******************************************************************************************
+
+test.stats:
+
+
+./rulerecon 110_3_4.dat 3 4 .4 .7 .2 50000 100 .01 5 test 
+
+  1       45039
+  2        2380
+  3       36661
+  4       42162
+  5       21081
+
+ 5/5 solutions  2.95e+04 iterations/solution
+ 2.44e+04 iterations/sec
+
+
+The first line just echoes the command line of the experiment.
+
+The program seeds the random number generator for the initial RRR point with the time
+function, so your results will differ. The timing above is for:
+
+Intel(R) Xeon(R) CPU E5-2640 v2 @ 2.00GHz
+
+******************************************************************************************
+
+test.sol:
+
+01110110
+01110110
+01110110
+01110110
+01110110
+
+Each line is (decimal) 110 written in base-2.
+
+******************************************************************************************
+
+test.err (final 10 lines of the RRR error stream):
+
+  0.413662
+  0.345130
+  0.380301
+  0.239345
+  0.375779
+  0.401099
+  0.263249
+  0.070750
+  0.023613
+  0.009970
+  
+******************************************************************************************
+
+test.rule (final 10 lines of the rule stream):
+
+  0 10  2  9 10  6 10  0
+  3  6  3 10  9 11 10  0
+  6  4  1 10  6 10 10  0
+  5  0 11 10  9 10 10  0
+  6  1 10 10  6 10  9  0
+  6  3 10 10  9 10 10  0
+ 10  6 10 10  3 10 10  0
+  0 10 10 10  0 10 10  0
+  1 10 10 10  0 10 10  0
+  0 10 10 10  0 10 10  0
+  
+This is the stream of the rule bits in the current trial. The continuous values of the
+concur estimates are mapped to the integers (0 -> 0, 1 -> 10). Values below 0 and above
+1 are possible during the search.
+
+******************************************************************************************
+
+data naming/format:
+
+All data file names follow the convention
+
+name_inputs_steps.dat
+
+
+Example: 110_3_4.dat is data for 3-input rule 110 with 4 time steps.
+
+Here is that data file:
+
+100001111101000100010111110111
+111100000111001111110000001111 
+
+These are just ASCII "0" and "1", and the first line is the initial state.
+
+******************************************************************************************
+
+General advice:
+
+Hyperparameter settings are very important, especially for hard instances! A good way to
+evaluate the quality of the search is to examine the columns of the rule file (test.rule
+above). If any column is stuck, or has only small fluctuations, you should try different
+hyperparameters.
+
+******************************************************************************************
+
+Report bugs to ve10@cornell.edu
