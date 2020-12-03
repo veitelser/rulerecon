@@ -31,6 +31,9 @@ stoperr: iterations are terminated when the error falls below this value
 trials: number of runs in the experiment
 id: character string label of the experiment
 
+When beta>0, the RRR iteration is as given in equation (2) of the paper. When beta is set
+to a negative value, the value -beta is used and the constraints A and B are swapped.
+
 ******************************************************************************************
 
 Example:
