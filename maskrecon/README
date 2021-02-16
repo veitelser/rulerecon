@@ -1,0 +1,180 @@
+Guide to reconstructing Game-of-Life masks with RRR
+
+******************************************************************************************
+
+This is a guide for reproducing the results in the appendix of
+
+"Reconstructing cellular automata rules from observations at nonconsecutive times"
+
+You will only need a C compiler and the standard C libraries.
+
+******************************************************************************************
+
+Before compiling maskrecon.c, edit the mask dimensions at the top of the file. For 3x3
+masks, as in ordinary Game-of-Life, you want
+
+#define D 1 // distance to mask center
+#define W 3 // width of mask
+#define W2 9 // area of mask
+
+For 5x5 Alien Life these should be
+
+#define D 2 // distance to mask center
+#define W 5 // width of mask
+#define W2 25 // area of mask
+
+Compile:
+
+gcc -O2 maskrecon.c -lm -o maskrecon
+
+******************************************************************************************
+
+Run the command line without arguments to be reminded of their placement:
+
+./maskrecon 
+expected thirteen arguments: datafile, steps, b1, b2, omega1, omega2, eta, beta, itermax, iterstride, stoperr, trials, id
+
+datafile: initial and final Life states (0/1) on square grids
+steps: number of time steps between data
+b1, b2: integer bounds for mask inequalities (b1=b2=3 for Game-of-Life)
+omega1, omega2, eta, beta: hyperparameters
+itermax: maximum number of RRR iterations per trial
+iterstride: number of RRR iterations between outputs to the error & param streams
+stoperr: iterations are terminated when the error falls below this value
+trials: number of runs in the experiment
+id: character string label of the experiment
+
+When beta>0, the RRR iteration is as given in equation (2) of the paper. When beta is set
+to a negative value, the value -beta is used and the constraints A and B are swapped.
+
+******************************************************************************************
+
+Example, for gol16_3, a 16x16 random state evolved by 3 time steps:
+
+./maskrecon gol16_3 3 3 3 .9 .7 2. .75 1000 50 .0001 3 test &
+
+This generates four output files: test.stats, test.sol, test.err, test.param
+
+******************************************************************************************
+
+test.stats:
+
+
+./maskrecon gol16_3 3 3 3 .9 .7 2. .75 1000 50 .0001 3 test 
+
+  1         463
+  2         607
+  3         396
+
+ 3/3 solutions  4.89e+02 iterations/solution    635.11 iterations/sec      0.77 sec/solution
+
+
+The first line just echoes the command line of the experiment.
+
+The program seeds the random number generator for the initial RRR point with the time
+function, so your results will differ. The timing above is for:
+
+Intel(R) Xeon(R) CPU E5-2640 v2 @ 2.00GHz
+
+******************************************************************************************
+
+test.sol:
+
+111111111 111101111
+111111111 111101111
+111111111 111101111
+
+Each line gives the flattened-out bits of the two masks, separated by a space.
+
+******************************************************************************************
+
+test.err:
+
+  0.055152  0.281406  0.183645  0.190206
+  0.056186  0.139661  0.163860  0.176856
+  0.079565  0.238962  0.160558  0.159330
+  0.050889  0.231765  0.143779  0.152534
+  0.080888  0.215199  0.150155  0.141390
+  0.035008  0.128002  0.113784  0.115254
+  0.012033  0.032958  0.065887  0.069592
+  0.000000  0.000001  0.000016  0.000020
+  
+Only the error stream of the final trial is saved. The error is broken down into its
+constributions from mask1 (column 1), mask2 (column 2), x (column 3), and y (last column).
+  
+******************************************************************************************
+
+test.param:
+
+  1.00  0.99  1.00  1.01  1.00  0.99  0.99  0.98  0.99     0.59  0.73  0.98  0.75  0.98  0.77  0.58  0.55  0.78
+  1.00  1.00  0.99  0.97  0.99  1.00  1.00  0.98  1.00     0.97  0.98  0.97  1.00  1.00  0.98  0.79 -0.11  0.99
+  0.99  1.00  1.00  1.01  0.99  1.00  0.95  1.00  0.99     0.71  0.93  0.77  0.99  0.20  1.00  1.03  0.99  0.68
+  1.00  0.99  0.99  0.97  1.00  1.01  1.00  1.00  0.99     0.68  0.55  0.88  0.99  0.90  0.99  0.82  0.97  0.04
+  1.00  1.00  0.83  1.00  1.00  1.00  1.00  0.99  1.00     1.04  0.98  0.81  1.01  0.19  1.00  0.76  1.00  0.64
+  1.00  0.99  1.00  1.00  1.00  1.00  1.00  1.00  0.99     0.99  1.00  0.88  0.85  0.01  1.00  1.00  0.95  0.99
+  1.00  1.00  1.00  1.00  1.00  1.00  1.00  1.00  1.00     1.00  1.00  1.00  1.00  0.00  0.99  1.00  1.00  1.00
+  1.00  1.00  1.00  1.00  1.00  1.00  1.00  1.00  1.00     1.00  1.00  1.00  1.00 -0.00  1.00  1.00  1.00  1.00
+  
+Only the mask-parameter stream of the final trial is saved. When a solution is found, the
+last line will match the last line in test.sol.
+
+******************************************************************************************
+
+data file naming/format:
+
+All data file names follow the convention
+
+golSIZE_STEPS, for ordinary Life
+goalSIZE_STEPS, for Alien Life
+
+
+Example, gol16_3 has states on two 16x16 grids evolved by 3 time steps:
+
+0001111000000101
+1010001011001000
+0101101000010110
+1010011010000001
+0001100100110010
+1011000101101100
+0010011100001000
+0000110111011001
+0000110010100100
+0101000111101010
+0000101110101110
+0100111110010000
+0100011011010010
+0100100110001111
+1101101110000110
+1001110110001110
+
+0000000100000000
+0000001111100000
+0110011000100000
+0110001010000000
+1000010000000001
+0100000000000000
+0100010110001011
+0000000001111110
+0011000000100000
+0010000000010000
+1001000000001000
+0000110001000000
+0000100001000011
+0001000000010111
+1010000011100000
+0000000000000000
+
+The top grid is at the earlier time.
+
+******************************************************************************************
+
+General advice:
+
+Hyperparameter settings are very important, especially for hard instances! A good way to
+evaluate the quality of the search is to examine the columns of the param file (test.param
+above). If any column is stuck, or has only small fluctuations, you should try different
+hyperparameters.
+
+******************************************************************************************
+
+Report bugs to ve10@cornell.edu
